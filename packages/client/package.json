@@ -1,0 +1,22 @@
+{
+  "name": "@agentora/client",
+  "version": "0.0.0",
+  "description": "Typed client + React hooks, built from contracts",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@agentora/core": "workspace:*"
+  }
+}

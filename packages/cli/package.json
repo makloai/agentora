@@ -1,0 +1,26 @@
+{
+  "name": "@agentora/cli",
+  "version": "0.0.0",
+  "description": "CLI adapter and the agentora bin",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "agentora": "./dist/bin.js"
+  },
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts src/bin.ts --format esm --dts --clean",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@agentora/core": "workspace:*",
+    "@agentora/server": "workspace:*"
+  }
+}

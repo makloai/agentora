@@ -1,0 +1,23 @@
+{
+  "name": "@agentora/doctor",
+  "version": "0.0.0",
+  "description": "Agent-readiness linter and score over the manifest IR",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@agentora/core": "workspace:*",
+    "@agentora/server": "workspace:*"
+  }
+}
