@@ -2,7 +2,7 @@
 // Each is a typed, composable Middleware. Per-contract metadata (sideEffects,
 // idempotency) is read here; the `doctor` lints for their presence.
 
-import { type Middleware } from './index';
+import type { Middleware } from './index';
 
 /** Tracing/observability around every attempt. */
 export function trace(): Middleware {

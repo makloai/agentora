@@ -1,6 +1,6 @@
 // @agentora/doctor — the differentiator. Score how agent-ready a router is by
 // linting the manifest IR for the things agents need.
-import { type Manifest } from '@agentora/core';
+import type { Manifest } from '@agentora/core';
 
 export type Severity = 'ok' | 'warn' | 'error';
 

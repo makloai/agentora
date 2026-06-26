@@ -1,5 +1,5 @@
 // @agentora/ai-sdk — expose an agentora app as Vercel AI SDK tools.
-import { type App } from '@agentora/server';
+import type { App } from '@agentora/server';
 
 /** Produce a record of AI SDK tools keyed by dotted action name. */
 export function aiSdkTools(_app: App): Record<string, unknown> {

@@ -1,5 +1,5 @@
 // @agentora/mcp — expose an agentora app as an MCP server (stdio + HTTP).
-import { type App } from '@agentora/server';
+import type { App } from '@agentora/server';
 
 export interface McpOptions {
   /** Auto-detect stdio when launched as an MCP subprocess. */

@@ -1,5 +1,5 @@
 // @agentora/openai — emit OpenAI tool specs (Chat Completions + Responses).
-import { type App } from '@agentora/server';
+import type { App } from '@agentora/server';
 
 /** Chat Completions `tools` array. */
 export function openaiChatTools(_app: App): unknown[] {

@@ -1,6 +1,6 @@
 // @agentora/client — a typed client built from CONTRACTS only. No server import,
 // safe in a browser/edge bundle.
-import { type Contract, type Infer } from '@agentora/core';
+import type { Contract, Infer } from '@agentora/core';
 
 export interface ClientOptions {
   url: string;

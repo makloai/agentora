@@ -1,11 +1,7 @@
 // @agentora/server — the execution runtime. Server-only (may touch Node/edge APIs).
 // Handlers live here, never on the contract.
 
-import {
-  type Contract,
-  type Infer,
-  type RouterNode,
-} from '@agentora/core';
+import type { Contract, Infer, RouterNode } from '@agentora/core';
 
 /** A live stream handed to handlers for logs, progress, and artifacts. */
 export interface Stream {

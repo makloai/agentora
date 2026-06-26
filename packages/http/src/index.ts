@@ -1,5 +1,5 @@
 // @agentora/http — expose an agentora app as a fetch-style HTTP handler.
-import { type App } from '@agentora/server';
+import type { App } from '@agentora/server';
 
 /** A Web `fetch` handler: POST /<action.name> with a JSON body. */
 export function toFetchHandler(_app: App): (req: Request) => Promise<Response> {

@@ -13,10 +13,13 @@
   "files": ["dist"],
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@agentora/server": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

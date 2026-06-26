@@ -45,5 +45,6 @@ pnpm typecheck
 ## Conventions
 
 - ESM-only. TypeScript. Biome for lint/format (`pnpm lint` / `pnpm fix`).
-- Inline type imports; named exports for utilities.
+- Use `import type { … }` for type-only imports (Biome's `useImportType`); named exports for utilities.
 - Every package builds with tsup to `dist/` and ships types.
+- pnpm 11 gates native build scripts — `@biomejs/biome` and `esbuild` are approved via `allowBuilds` in `pnpm-workspace.yaml`.
