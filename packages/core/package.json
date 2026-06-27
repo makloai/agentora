@@ -3,6 +3,11 @@
   "version": "0.0.0",
   "description": "agentora contracts, schema, router, and manifest IR — isomorphic, zero-dependency",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/makloai/agentora.git",
+    "directory": "packages/core"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
