@@ -78,6 +78,14 @@ describe('toStrictJsonSchema — OpenAI variant', () => {
     });
   });
 
+  it('adds null to an optional enum so the nullable type is satisfiable', () => {
+    const schema = s.object({ size: s.enum(['s', 'm', 'l']).optional() });
+    const strict = toStrictJsonSchema(schema);
+    const size = (strict.properties as Record<string, { type: unknown; enum: unknown[] }>).size;
+    expect(size.type).toEqual(['string', 'null']);
+    expect(size.enum).toEqual(['s', 'm', 'l', null]);
+  });
+
   it('accepts an already-compiled JSON Schema', () => {
     const json = toJsonSchema(s.object({ a: s.string() }));
     expect(toStrictJsonSchema(json)).toEqual({

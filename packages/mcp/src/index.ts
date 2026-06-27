@@ -77,13 +77,15 @@ export async function callTool(
         ? { log: () => {}, artifact: () => {}, progress: opts.progress }
         : undefined,
     });
-    return {
+    const result: CallToolResult = {
       content: [{ type: 'text', text: JSON.stringify(output) }],
-      structuredContent:
-        output && typeof output === 'object'
-          ? (output as Record<string, unknown>)
-          : { value: output },
     };
+    // structuredContent must be an object; only set it when the output is one,
+    // so it never contradicts a primitive output's declared outputSchema.
+    if (output && typeof output === 'object') {
+      result.structuredContent = output as Record<string, unknown>;
+    }
+    return result;
   } catch (err) {
     if (err instanceof AgentoraError && err.code === 'NOT_FOUND') {
       throw new McpError(ErrorCode.InvalidParams, err.message);

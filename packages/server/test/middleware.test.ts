@@ -193,6 +193,82 @@ describe('trace', () => {
   });
 });
 
+describe('contract-declared auth/concurrency metadata', () => {
+  it('enforces scopes declared on the contract (not just auth() opts)', async () => {
+    const scoped = defineContract({
+      name: 'billing.charge',
+      sideEffects: 'write',
+      auth: { scopes: ['billing:write'] },
+      input: s.object({ amount: s.number() }),
+      output: s.object({ ok: s.boolean() }),
+    });
+    const make = (scopes: string[] | null) =>
+      createApp({
+        router: router({ billing: { charge: implement(scoped, async () => ({ ok: true })) } }),
+        context: () => ({ user: scopes ? { scopes } : null }),
+        use: [auth()],
+      });
+
+    await expect(
+      make(['billing:read']).invoke('billing.charge', { amount: 1 })
+    ).rejects.toMatchObject({
+      code: 'FORBIDDEN',
+    });
+    await expect(make(['billing:write']).invoke('billing.charge', { amount: 1 })).resolves.toEqual({
+      ok: true,
+    });
+  });
+
+  it("treats a contract marked auth:'public' as no-auth even for writes", async () => {
+    const open = defineContract({
+      name: 'feedback.submit',
+      sideEffects: 'write',
+      auth: 'public',
+      input: s.object({ text: s.string() }),
+      output: s.object({ ok: s.boolean() }),
+    });
+    const a = createApp({
+      router: router({ feedback: { submit: implement(open, async () => ({ ok: true })) } }),
+      context: () => ({ user: null }),
+      use: [auth()],
+    });
+    await expect(a.invoke('feedback.submit', { text: 'hi' })).resolves.toEqual({ ok: true });
+  });
+
+  it('honors a per-contract concurrency bound over the global default', async () => {
+    const bounded = defineContract({
+      name: 'export.run',
+      sideEffects: 'write',
+      concurrency: 1,
+      input: s.object({}),
+      output: s.object({ ok: s.boolean() }),
+    });
+    let active = 0;
+    let maxActive = 0;
+    const a = createApp({
+      router: router({
+        export: {
+          run: implement(bounded, async () => {
+            active++;
+            maxActive = Math.max(maxActive, active);
+            await new Promise((r) => setTimeout(r, 5));
+            active--;
+            return { ok: true };
+          }),
+        },
+      }),
+      // global default is generous; the contract caps it at 1
+      use: [concurrency(16)],
+    });
+    await Promise.all([
+      a.invoke('export.run', {}),
+      a.invoke('export.run', {}),
+      a.invoke('export.run', {}),
+    ]);
+    expect(maxActive).toBe(1);
+  });
+});
+
 describe('memoryStore', () => {
   it('isolates keys with get/set/has', async () => {
     const store = memoryStore<number>();

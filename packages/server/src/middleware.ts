@@ -66,14 +66,25 @@ export interface AuthOptions {
 export function auth(opts: AuthOptions = {}): Middleware {
   return async (args, next) => {
     const a = args as Args;
+    const declared = a.contract.auth;
+
+    // A contract marked `auth: 'public'` opts out of authentication entirely.
+    if (declared === 'public') {
+      return next();
+    }
+
     const user = (a.ctx as AuthContext | undefined)?.user;
-    const needsAuth = opts.require === true || a.contract.sideEffects === 'write';
+    const needsAuth =
+      opts.require === true || a.contract.sideEffects === 'write' || declared !== undefined;
 
     if (needsAuth && !user) {
       throw new AgentoraError('UNAUTHENTICATED', 'authentication required');
     }
 
-    const required = typeof opts.scopes === 'function' ? opts.scopes(a) : (opts.scopes ?? []);
+    // Required scopes come from the contract's declared auth and any passed to auth().
+    const declaredScopes = declared?.scopes ?? [];
+    const optScopes = typeof opts.scopes === 'function' ? opts.scopes(a) : (opts.scopes ?? []);
+    const required = [...declaredScopes, ...optScopes];
     if (required.length > 0) {
       const held = new Set(user?.scopes ?? []);
       for (const scope of required) {
@@ -122,10 +133,10 @@ export function concurrency(limit: number): Middleware {
   const active = new Map<string, number>();
   const waiters = new Map<string, Array<() => void>>();
 
-  const acquire = (name: string) =>
+  const acquire = (name: string, max: number) =>
     new Promise<void>((resolve) => {
       const running = active.get(name) ?? 0;
-      if (running < limit) {
+      if (running < max) {
         active.set(name, running + 1);
         resolve();
       } else {
@@ -146,12 +157,14 @@ export function concurrency(limit: number): Middleware {
   };
 
   return async (args, next) => {
-    const name = (args as Args).contract.name;
-    await acquire(name);
+    const contract = (args as Args).contract;
+    // The contract's declared bound wins; fall back to the global default.
+    const max = contract.concurrency ?? limit;
+    await acquire(contract.name, max);
     try {
       return await next();
     } finally {
-      release(name);
+      release(contract.name);
     }
   };
 }
@@ -254,9 +267,11 @@ function deepScrub(value: unknown, keys: ReadonlySet<string>): unknown {
 }
 
 function stableStringify(value: unknown): string {
+  // Codepoint comparison, not localeCompare — the key must be identical across
+  // runtimes/locales so a shared idempotency Store dedupes correctly.
   return JSON.stringify(value, (_k, v) =>
     v && typeof v === 'object' && !Array.isArray(v)
-      ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => a.localeCompare(b)))
+      ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
       : v
   );
 }

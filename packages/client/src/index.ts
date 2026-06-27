@@ -26,7 +26,9 @@ function proxy<T>(path: string[], opts: ClientOptions): Client<T> {
   const call = (input: unknown) => invoke(path.join('.'), input, opts);
   return new Proxy(call, {
     get(_target, prop) {
-      if (typeof prop !== 'string') {
+      // Never look thenable: a namespace node returned/awaited in an async
+      // context must not be unwrapped as a promise (it would POST to `…/then`).
+      if (typeof prop !== 'string' || prop === 'then') {
         return undefined;
       }
       return proxy([...path, prop], opts);

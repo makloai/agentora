@@ -118,11 +118,16 @@ function strict(schema: JsonSchema): JsonSchema {
 
 function nullable(schema: JsonSchema): JsonSchema {
   const t = schema.type;
-  if (typeof t === 'string') {
-    return { ...schema, type: [t, 'null'] };
+  const out: JsonSchema =
+    typeof t === 'string'
+      ? { ...schema, type: [t, 'null'] }
+      : Array.isArray(t) && !t.includes('null')
+        ? { ...schema, type: [...t, 'null'] }
+        : { ...schema };
+  // If the schema constrains values with `enum`, null must be an allowed member
+  // too, otherwise the nullable type can never actually be satisfied by null.
+  if (Array.isArray(out.enum) && !out.enum.includes(null)) {
+    out.enum = [...out.enum, null];
   }
-  if (Array.isArray(t) && !t.includes('null')) {
-    return { ...schema, type: [...t, 'null'] };
-  }
-  return schema;
+  return out;
 }
