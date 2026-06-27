@@ -31,8 +31,11 @@ export function defineContract<I extends Schema, O extends Schema>(
   return contract;
 }
 
-/** A node in a router tree: a contract (or implemented contract) or a nested group. */
-export type RouterNode = Contract | { readonly [k: string]: RouterNode };
+/** A leaf in a router tree: a bare contract, or a contract bound to a handler. */
+export type RouterLeaf = Contract | { readonly contract: Contract };
+
+/** A node in a router tree: a leaf (contract / implemented contract) or a nested group. */
+export type RouterNode = RouterLeaf | { readonly [k: string]: RouterNode };
 
 /** Compose contracts (or implementations) into a typed, namespaced tree. */
 export function router<T extends Record<string, RouterNode>>(tree: T): T {
