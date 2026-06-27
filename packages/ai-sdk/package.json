@@ -17,7 +17,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@agentora/server": "workspace:*"
+    "@agentora/core": "workspace:*",
+    "@agentora/server": "workspace:*",
+    "ai": "^7.0.2"
   },
   "publishConfig": {
     "access": "public"
