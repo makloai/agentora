@@ -4,7 +4,7 @@
 // strict / Structured-Outputs variant of the contract's JSON Schema.
 
 import { type JsonSchema, toStrictJsonSchema } from '@agentora/core';
-import type { App } from '@agentora/server';
+import type { AnyApp } from '@agentora/server';
 
 interface FunctionSpec {
   name: string;
@@ -14,7 +14,7 @@ interface FunctionSpec {
 }
 
 /** One strict function spec per action, in manifest order. */
-function functionSpecs(app: App): FunctionSpec[] {
+function functionSpecs(app: AnyApp): FunctionSpec[] {
   return app.manifest().actions.map((action) => ({
     name: action.name,
     ...(action.description !== undefined ? { description: action.description } : {}),
@@ -24,11 +24,11 @@ function functionSpecs(app: App): FunctionSpec[] {
 }
 
 /** Chat Completions `tools` array — `parameters` nested under `function`. */
-export function openaiChatTools(app: App): unknown[] {
+export function openaiChatTools(app: AnyApp): unknown[] {
   return functionSpecs(app).map((fn) => ({ type: 'function', function: fn }));
 }
 
 /** Responses API `tools` array — flattened, no `function` wrapper. */
-export function openaiResponsesTools(app: App): unknown[] {
+export function openaiResponsesTools(app: AnyApp): unknown[] {
   return functionSpecs(app).map((fn) => ({ type: 'function', ...fn }));
 }

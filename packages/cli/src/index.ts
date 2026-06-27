@@ -1,6 +1,6 @@
 // @agentora/cli — turn an agentora app into a CLI, and the `agentora` bin.
 import { AgentoraError, type Manifest } from '@agentora/core';
-import type { App } from '@agentora/server';
+import type { AnyApp } from '@agentora/server';
 
 /** Injected IO so the CLI is testable without touching the real process. */
 export interface CliIo {
@@ -22,7 +22,7 @@ export interface Cli {
 }
 
 /** Build a CLI program from an app: one subcommand per action, flags from input schema. */
-export function toCli(app: App, io: CliIo = defaultIo): Cli {
+export function toCli(app: AnyApp, io: CliIo = defaultIo): Cli {
   const manifest = app.manifest();
 
   return {
@@ -66,7 +66,7 @@ export function toCli(app: App, io: CliIo = defaultIo): Cli {
 }
 
 /** The manifest IR as pretty JSON — what `agentora gen` emits. */
-export function manifestJson(app: App): string {
+export function manifestJson(app: AnyApp): string {
   return JSON.stringify(app.manifest(), null, 2);
 }
 

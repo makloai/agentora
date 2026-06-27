@@ -5,7 +5,7 @@
 // rather than the high-level `registerTool` (which expects a Zod raw shape).
 
 import { AgentoraError } from '@agentora/core';
-import type { App } from '@agentora/server';
+import type { AnyApp } from '@agentora/server';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import {
   CallToolRequestSchema,
@@ -37,7 +37,7 @@ export interface CallToolResult {
 }
 
 /** One MCP tool spec per manifest action. */
-export function listTools(app: App): McpToolSpec[] {
+export function listTools(app: AnyApp): McpToolSpec[] {
   return app.manifest().actions.map((action) => ({
     name: action.name,
     ...(action.description !== undefined ? { description: action.description } : {}),
@@ -60,7 +60,7 @@ export interface CallToolOptions {
  * with `isError: true` so the model can read the message and self-correct.
  */
 export async function callTool(
-  app: App,
+  app: AnyApp,
   toolNames: ReadonlySet<string>,
   name: string,
   args: unknown,
@@ -96,7 +96,7 @@ export async function callTool(
 }
 
 /** Build a low-level MCP `Server` wired to the app's tools. */
-export function createServer(app: App, opts: McpOptions = {}): Server {
+export function createServer(app: AnyApp, opts: McpOptions = {}): Server {
   const server = new Server(
     { name: opts.name ?? 'agentora', version: opts.version ?? '0.0.0' },
     { capabilities: { tools: {} } }
@@ -126,7 +126,7 @@ export function createServer(app: App, opts: McpOptions = {}): Server {
 }
 
 /** Build an MCP server from an app and start it (stdio by default). */
-export function toMcp(app: App, opts: McpOptions = {}) {
+export function toMcp(app: AnyApp, opts: McpOptions = {}) {
   const server = createServer(app, opts);
   return {
     server,

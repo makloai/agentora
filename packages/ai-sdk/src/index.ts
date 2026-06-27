@@ -4,11 +4,11 @@
 // in `jsonSchema()`, and `execute` runs the action through the app's middleware.
 
 import { type JsonSchema, toStrictJsonSchema } from '@agentora/core';
-import type { App } from '@agentora/server';
+import type { AnyApp } from '@agentora/server';
 import { type Tool, jsonSchema, tool } from 'ai';
 
 /** Produce a record of AI SDK tools keyed by dotted action name. */
-export function aiSdkTools(app: App): Record<string, Tool> {
+export function aiSdkTools(app: AnyApp): Record<string, Tool> {
   const tools: Record<string, Tool> = {};
   for (const action of app.manifest().actions) {
     tools[action.name] = tool({

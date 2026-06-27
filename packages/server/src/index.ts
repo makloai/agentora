@@ -87,6 +87,14 @@ export interface App<Ctx = unknown> {
   manifest(): Manifest;
 }
 
+/**
+ * A context-agnostic app reference for adapters. Adapters never touch `Ctx`, but
+ * `Middleware<Ctx>` is invariant in `Ctx`, so a concrete `App<MyCtx>` is not
+ * assignable to `App<unknown>`. Adapters accept `AnyApp` to take any app.
+ */
+// biome-ignore lint/suspicious/noExplicitAny: adapters are deliberately context-agnostic
+export type AnyApp = App<any>;
+
 function isImplemented(node: RouterNode): node is Implemented {
   const n = node as Partial<Implemented>;
   return !!n.contract && typeof n.handler === 'function';

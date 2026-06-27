@@ -58,16 +58,38 @@ function isFailure(result: Result<unknown>): result is StandardSchemaV1.FailureR
   return result.issues !== undefined;
 }
 
+declare const OPTIONAL_BRAND: unique symbol;
+
 /** A schema with chainable refinements. */
 export interface Refinable<T> extends Schema<T> {
   readonly [NODE]: SchemaNode;
-  optional(): Refinable<T | undefined>;
-  default(value: T): Refinable<T>;
+  optional(): OptionalSchema<T | undefined>;
+  default(value: T): OptionalSchema<T>;
   /** Minimum string length / numeric value. No-op for other types. */
   min(bound: number): Refinable<T>;
   /** Attach a human-readable description (surfaces in JSON Schema + tool specs). */
   describe(text: string): Refinable<T>;
 }
+
+/**
+ * A schema marked optional (via `.optional()` or `.default()`). The phantom
+ * brand lets `s.object` make these keys optional in the inferred type, so a
+ * defaulted field can be omitted by callers.
+ */
+export interface OptionalSchema<T> extends Refinable<T> {
+  readonly [OPTIONAL_BRAND]: true;
+}
+
+type OptionalKeys<S> = {
+  [K in keyof S]: S[K] extends OptionalSchema<unknown> ? K : never;
+}[keyof S];
+type RequiredKeys<S> = Exclude<keyof S, OptionalKeys<S>>;
+type Simplify<T> = { [K in keyof T]: T[K] } & {};
+
+/** Object output type with optional/defaulted keys made optional. */
+export type InferObject<S extends Record<string, Schema>> = Simplify<
+  { [K in RequiredKeys<S>]: Infer<S[K]> } & { [K in OptionalKeys<S>]?: Infer<S[K]> }
+>;
 
 function refinable<T>(validate: (value: unknown) => Result<T>, node: SchemaNode): Refinable<T> {
   return {
@@ -77,14 +99,14 @@ function refinable<T>(validate: (value: unknown) => Result<T>, node: SchemaNode)
       return refinable<T | undefined>(
         (value) => (value === undefined ? succeed(undefined) : validate(value)),
         { ...node, optional: true }
-      );
+      ) as OptionalSchema<T | undefined>;
     },
     default(fallback: T) {
       return refinable<T>((value) => (value === undefined ? succeed(fallback) : validate(value)), {
         ...node,
         hasDefault: true,
         defaultValue: fallback,
-      });
+      }) as OptionalSchema<T>;
     },
     min(bound: number) {
       const refined: SchemaNode =
@@ -157,7 +179,7 @@ export const s = {
       { kind: 'array', item }
     ),
   object: <Shape extends Record<string, Schema>>(shape: Shape) =>
-    refinable<{ [K in keyof Shape]: Infer<Shape[K]> }>(
+    refinable<InferObject<Shape>>(
       (v) => {
         if (typeof v !== 'object' || v === null) {
           return failWith('expected object');
@@ -172,7 +194,7 @@ export const s = {
           out[key] = result.value;
         }
 
-        return succeed(out as { [K in keyof Shape]: Infer<Shape[K]> });
+        return succeed(out as InferObject<Shape>);
       },
       { kind: 'object', shape }
     ),

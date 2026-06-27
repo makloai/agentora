@@ -3,7 +3,7 @@
 // When the client accepts text/event-stream, handler stream events are relayed as SSE.
 
 import { AgentoraError } from '@agentora/core';
-import type { App } from '@agentora/server';
+import type { AnyApp } from '@agentora/server';
 import { STATUS } from './errors';
 
 const DISCOVERY_PATH = '.well-known/actions.json';
@@ -15,7 +15,7 @@ export interface FetchHandlerOptions {
 
 /** A Web `fetch` handler for an agentora app. */
 export function toFetchHandler(
-  app: App,
+  app: AnyApp,
   opts: FetchHandlerOptions = {}
 ): (req: Request) => Promise<Response> {
   const base = (opts.basePath ?? '').replace(/^\/+|\/+$/g, '');
@@ -56,7 +56,7 @@ function acceptsEventStream(req: Request): boolean {
   return (req.headers.get('accept') ?? '').includes('text/event-stream');
 }
 
-function streamResponse(app: App, name: string, input: unknown, req: Request): Response {
+function streamResponse(app: AnyApp, name: string, input: unknown, req: Request): Response {
   const encoder = new TextEncoder();
   const body = new ReadableStream<Uint8Array>({
     async start(controller) {
