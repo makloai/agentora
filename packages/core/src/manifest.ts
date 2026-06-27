@@ -47,6 +47,8 @@ function entryOf(contract: Contract): ManifestEntry {
     ...(contract.description !== undefined ? { description: contract.description } : {}),
     sideEffects: contract.sideEffects ?? 'none',
     idempotency: contract.idempotency ?? 'none',
+    ...(contract.auth !== undefined ? { auth: contract.auth } : {}),
+    ...(contract.concurrency !== undefined ? { concurrency: contract.concurrency } : {}),
     input: resolveJsonSchema(contract.input, 'input'),
     output: resolveJsonSchema(contract.output, 'output'),
   };

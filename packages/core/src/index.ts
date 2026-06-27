@@ -14,12 +14,19 @@ export { toManifest } from './manifest';
 export type SideEffects = 'none' | 'read' | 'write';
 export type Idempotency = 'none' | 'conditional' | 'always';
 
+/** Declarative permission requirement. `'public'` is an explicit opt-out of auth. */
+export type AuthRequirement = 'public' | { readonly scopes?: readonly string[] };
+
 /** A pure capability declaration. Carries no handler — safe to import anywhere. */
 export interface Contract<I extends Schema = Schema, O extends Schema = Schema> {
   readonly name: string;
   readonly description?: string;
   readonly sideEffects?: SideEffects;
   readonly idempotency?: Idempotency;
+  /** Declarative permission requirement read by auth middleware and doctor. */
+  readonly auth?: AuthRequirement;
+  /** Declarative bounded-concurrency hint read by concurrency middleware and doctor. */
+  readonly concurrency?: number;
   readonly input: I;
   readonly output: O;
 }
@@ -53,6 +60,10 @@ export interface ManifestEntry {
   description?: string;
   sideEffects: SideEffects;
   idempotency: Idempotency;
+  /** Declarative permission requirement, when the contract declares one. */
+  auth?: AuthRequirement;
+  /** Declarative bounded-concurrency hint, when the contract declares one. */
+  concurrency?: number;
   /** JSON Schema compiled from the contract input/output. */
   input: unknown;
   output: unknown;
