@@ -21,6 +21,9 @@
   },
   "dependencies": {
     "@agentora/core": "workspace:*",
+    "@agentora/doctor": "workspace:*",
+    "@agentora/http": "workspace:*",
+    "@agentora/mcp": "workspace:*",
     "@agentora/server": "workspace:*"
   },
   "publishConfig": {
