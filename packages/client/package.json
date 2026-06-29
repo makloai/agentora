@@ -3,23 +3,41 @@
   "version": "0.0.0",
   "description": "Typed client + React hooks, built from contracts",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/makloai/agentora.git",
+    "directory": "packages/client"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.js",
+    "./react": "./dist/react.js"
   },
   "files": ["dist"],
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --clean",
+    "build": "tsup src/index.ts src/react.ts --format esm --dts --clean",
     "test": "vitest run --passWithNoTests",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@agentora/core": "workspace:*"
   },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "react": "^19.2.7"
   }
 }

@@ -3,6 +3,11 @@
   "version": "0.0.0",
   "description": "OpenAI Chat + Responses tool specs for agentora",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/makloai/agentora.git",
+    "directory": "packages/openai"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -17,6 +22,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@agentora/core": "workspace:*",
     "@agentora/server": "workspace:*"
   },
   "publishConfig": {

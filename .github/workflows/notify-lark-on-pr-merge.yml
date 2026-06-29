@@ -1,0 +1,147 @@
+name: Notify Lark on PR Merge
+
+on:
+  pull_request:
+    types:
+      - closed
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  notify-lark:
+    # Only fire when the PR was actually merged (not just closed).
+    if: ${{ github.event.pull_request.merged == true }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Send Lark (Feishu) notification
+        env:
+          FEISHU_BOT_WEBHOOK_URL: ${{ secrets.FEISHU_BOT_WEBHOOK_URL }}
+          FEISHU_BOT_SECRET: ${{ secrets.FEISHU_BOT_SECRET }}
+          REPOSITORY: ${{ github.repository }}
+          REPOSITORY_URL: ${{ github.server_url }}/${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          MERGED_BY: ${{ github.event.pull_request.merged_by.login }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          MERGED_AT: ${{ github.event.pull_request.merged_at }}
+          MERGE_COMMIT_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        run: |
+          node <<'NODE'
+          const crypto = require("node:crypto");
+
+          function formatMergedAt(value) {
+            if (!value) {
+              return "unknown";
+            }
+
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) {
+              return value;
+            }
+
+            return `${date.toISOString().replace("T", " ").replace(".000Z", " UTC")}`;
+          }
+
+          function createPayload() {
+            const prNumber = process.env.PR_NUMBER ?? "";
+            const prTitle = process.env.PR_TITLE ?? "";
+            const prUrl = process.env.PR_URL ?? "";
+            const repository = process.env.REPOSITORY ?? "";
+            const repositoryUrl = process.env.REPOSITORY_URL ?? "";
+            const author = process.env.PR_AUTHOR ?? "unknown";
+            const mergedBy = process.env.MERGED_BY || "unknown";
+            const baseRef = process.env.BASE_REF ?? "";
+            const headRef = process.env.HEAD_REF ?? "";
+            const mergedAt = formatMergedAt(process.env.MERGED_AT);
+            const mergeCommit = process.env.MERGE_COMMIT_SHA
+              ? process.env.MERGE_COMMIT_SHA.slice(0, 7)
+              : "unknown";
+
+            return {
+              msg_type: "post",
+              content: {
+                post: {
+                  zh_cn: {
+                    title: `PR 已合并到 ${baseRef || "目标分支"}`,
+                    content: [
+                      [
+                        { tag: "text", text: "仓库：" },
+                        { tag: "a", text: repository, href: repositoryUrl },
+                      ],
+                      [
+                        { tag: "text", text: "PR：" },
+                        { tag: "a", text: `#${prNumber} ${prTitle}`, href: prUrl },
+                      ],
+                      [{ tag: "text", text: `分支：${headRef} -> ${baseRef}` }],
+                      [{ tag: "text", text: `作者：${author}  合并人：${mergedBy}` }],
+                      [{ tag: "text", text: `合并时间：${mergedAt}` }],
+                      [{ tag: "text", text: `Merge Commit：${mergeCommit}` }],
+                    ],
+                  },
+                },
+              },
+            };
+          }
+
+          async function main() {
+            const webhookUrl = process.env.FEISHU_BOT_WEBHOOK_URL;
+            if (!webhookUrl) {
+              console.log("FEISHU_BOT_WEBHOOK_URL is not configured. Skipping notification.");
+              return;
+            }
+
+            const payload = createPayload();
+            const secret = process.env.FEISHU_BOT_SECRET;
+
+            if (secret) {
+              const timestamp = Math.floor(Date.now() / 1000).toString();
+              const sign = crypto
+                .createHmac("sha256", `${timestamp}\n${secret}`)
+                .digest("base64");
+
+              payload.timestamp = timestamp;
+              payload.sign = sign;
+            }
+
+            const response = await fetch(webhookUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+
+            const body = await response.text();
+
+            if (!response.ok) {
+              throw new Error(`Lark webhook request failed with status ${response.status}: ${body}`);
+            }
+
+            let data = null;
+            try {
+              data = JSON.parse(body);
+            } catch {
+              data = null;
+            }
+
+            if (data && typeof data === "object" && "code" in data && data.code !== 0) {
+              throw new Error(`Lark webhook returned an error: ${body}`);
+            }
+
+            console.log("Lark notification sent successfully.");
+          }
+
+          main().catch((error) => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE

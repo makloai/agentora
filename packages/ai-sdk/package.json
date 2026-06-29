@@ -3,6 +3,11 @@
   "version": "0.0.0",
   "description": "Vercel AI SDK tool adapter for agentora apps",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/makloai/agentora.git",
+    "directory": "packages/ai-sdk"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -17,7 +22,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@agentora/server": "workspace:*"
+    "@agentora/core": "workspace:*",
+    "@agentora/server": "workspace:*",
+    "ai": "^7.0.2"
   },
   "publishConfig": {
     "access": "public"

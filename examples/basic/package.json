@@ -1,0 +1,23 @@
+{
+  "name": "@agentora/example-basic",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Dogfood example: one contract, every agentora surface",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@agentora/ai-sdk": "workspace:*",
+    "@agentora/client": "workspace:*",
+    "@agentora/core": "workspace:*",
+    "@agentora/doctor": "workspace:*",
+    "@agentora/http": "workspace:*",
+    "@agentora/mcp": "workspace:*",
+    "@agentora/openai": "workspace:*",
+    "@agentora/server": "workspace:*"
+  }
+}

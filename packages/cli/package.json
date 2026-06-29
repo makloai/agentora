@@ -3,6 +3,11 @@
   "version": "0.0.0",
   "description": "CLI adapter and the agentora bin",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/makloai/agentora.git",
+    "directory": "packages/cli"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -21,6 +26,9 @@
   },
   "dependencies": {
     "@agentora/core": "workspace:*",
+    "@agentora/doctor": "workspace:*",
+    "@agentora/http": "workspace:*",
+    "@agentora/mcp": "workspace:*",
     "@agentora/server": "workspace:*"
   },
   "publishConfig": {

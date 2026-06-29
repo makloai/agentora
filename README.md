@@ -6,7 +6,7 @@ Define an application capability **once** as a typed *contract*, then expose it 
 
 agentora is a *capability layer*, not an agent framework. It's deliberately unopinionated about orchestration, prompts, memory, and long-running workflows — those stay application-level. Its job is to make the capabilities you already have **agent-ready by construction**: explicit contracts and reviewable surfaces.
 
-> Status: 🚧 early scaffold. The package layout and API below are the target shape; implementations are being filled in. See [milestones](#milestones).
+> Status: 🟢 v0.1 — all packages implemented and tested (core, server, every surface, and `doctor`). A runnable end-to-end example lives in [`examples/basic`](examples/basic); docs are in [`docs/site`](docs/site). See [milestones](#milestones).
 
 ## The idea
 
@@ -107,12 +107,12 @@ Each adapter takes the app/router as input and is independently installable — 
 
 ## Milestones
 
-1. `@agentora/core` — contract, schema, router, manifest IR.
-2. `@agentora/server` — runtime, middleware, context, streaming.
-3. First two adapters — `@agentora/mcp` + `@agentora/ai-sdk`.
-4. `@agentora/doctor` — the readiness score.
-5. Remaining surfaces — `http`, `client`/`react`, `cli`, `openai`.
-6. OSS polish — docs (agentora.dev), examples, npm publish, CI.
+1. ✅ `@agentora/core` — contract, schema, router, manifest IR.
+2. ✅ `@agentora/server` — runtime, middleware, context, streaming.
+3. ✅ First two adapters — `@agentora/mcp` (+ OAuth 2.1) + `@agentora/ai-sdk`.
+4. ✅ `@agentora/doctor` — the readiness score.
+5. ✅ Remaining surfaces — `http`, `client`/`react`, `cli`, `openai`.
+6. ✅ OSS polish — docs, dogfood example, changesets release, CI. (Hosting `agentora.dev` is the remaining ops follow-up.)
 
 ## Development
 
