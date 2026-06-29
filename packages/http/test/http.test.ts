@@ -74,6 +74,25 @@ describe('toFetchHandler', () => {
     expect(res.status).toBe(405);
   });
 
+  it('strips a configured basePath before resolving the action', async () => {
+    const app = createApp({
+      router: router({ products: { search: implement(search, async () => ({ ids: ['a'] })) } }),
+    });
+    const handler = toFetchHandler(app, { basePath: '/api' });
+    const ok = await handler(
+      new Request('http://x/api/products.search', {
+        method: 'POST',
+        body: JSON.stringify({ query: 'q' }),
+      })
+    );
+    expect(ok.status).toBe(200);
+    expect(await ok.json()).toEqual({ ids: ['a'] });
+
+    // discovery is also mounted under the basePath
+    const disc = await handler(new Request('http://x/api/.well-known/actions.json'));
+    expect(disc.status).toBe(200);
+  });
+
   it('streams an SSE response when the client accepts text/event-stream', async () => {
     const handler = handlerFor([], async ({ stream }) => {
       stream.log('searching');
