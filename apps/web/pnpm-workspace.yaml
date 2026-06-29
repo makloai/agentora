@@ -1,5 +1,5 @@
 # Isolates this app from the agentora SDK pnpm workspace one level up, so the
-# website's deps and build never touch the SDK's publish pipeline.
+# the web app's deps and build never touch the SDK's publish pipeline.
 packages: []
 allowBuilds:
   sharp: true

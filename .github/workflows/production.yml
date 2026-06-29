@@ -1,20 +1,20 @@
 # Production-deploy workflow for the website.
 #
 # Adapted from makloai/makloai's vercel-production.yml, simplified to this
-# repo's single isolated `website/` app (no affected-app matrix, no Neon, no
-# migrations). On every push to main that touches website/ (or this workflow),
+# repo's single isolated `apps/web/` app (no affected-app matrix, no Neon, no
+# migrations). On every push to main that touches apps/web/ (or this workflow),
 # it type-checks, builds locally via `vercel build --prod`, and uploads the
 # prebuilt output as a production deploy. Also runnable on demand via
 # workflow_dispatch.
 #
 # The production URL is written to the run's job summary and surfaced through
-# the `website-production` environment's deployment URL — there is no PR to
+# the `web-production` environment's deployment URL — there is no PR to
 # comment on for a push to main.
 #
 # Required configuration (GitHub → repo Variables + Environments):
 #   - secret: VERCEL_TOKEN
 #   - vars:   VERCEL_ORG_ID, VERCEL_PROJECT_ID
-# The Vercel project's Root Directory is `website/`; see preview.yml for notes.
+# The Vercel project's Root Directory is `apps/web/`; see preview.yml for notes.
 # If Vercel's own Git integration still auto-deploys main, disable it so CI is
 # the single source of production deploys.
 
@@ -25,7 +25,7 @@ on:
   push:
     branches: [main]
     paths:
-      - "website/**"
+      - "apps/web/**"
       - ".github/workflows/production.yml"
 
 permissions:
@@ -45,7 +45,7 @@ jobs:
     permissions:
       contents: read
     environment:
-      name: website-production
+      name: web-production
       url: ${{ steps.deploy.outputs.url }}
     steps:
       - name: Checkout
@@ -61,26 +61,26 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
-          cache-dependency-path: website/pnpm-lock.yaml
+          cache-dependency-path: apps/web/pnpm-lock.yaml
 
       # ── Quality gate ──────────────────────────────────────────────────
       - name: Install website dependencies
-        working-directory: website
+        working-directory: apps/web
         run: pnpm install --frozen-lockfile
 
       - name: Type-check website
-        working-directory: website
+        working-directory: apps/web
         run: pnpm check-types
 
       # Skip the deploy steps (but keep the job green) until the Vercel
-      # credentials exist on the `website-production` environment.
+      # credentials exist on the `web-production` environment.
       - name: Check deploy configuration
         id: guard
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           if [ -z "$VERCEL_TOKEN" ]; then
-            echo "::notice::VERCEL_TOKEN not set on the website-production environment — skipping deploy. Add it to enable production deploys."
+            echo "::notice::VERCEL_TOKEN not set on the web-production environment — skipping deploy. Add it to enable production deploys."
             echo "configured=false" >> "$GITHUB_OUTPUT"
           else
             echo "configured=true" >> "$GITHUB_OUTPUT"

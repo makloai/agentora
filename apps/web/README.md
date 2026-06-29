@@ -7,7 +7,7 @@ It is **isolated from the SDK pnpm workspace** (own `pnpm-workspace.yaml`) so it
 deps and build never touch the package publish pipeline.
 
 ```bash
-cd website
+cd apps/web
 pnpm install
 pnpm dev      # http://localhost:3000
 pnpm build    # production build
@@ -15,5 +15,5 @@ pnpm build    # production build
 
 ## Deploy
 
-The Vercel project's **Root Directory** is set to `website`. Pushes deploy
-automatically; `vercel --prod` from this directory deploys manually.
+The Vercel project's **Root Directory** is set to `apps/web`. The `preview` and
+`production` GitHub Actions workflows deploy on PRs and on merge to `main`.
