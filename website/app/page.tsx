@@ -1,17 +1,11 @@
-import {
-  ArrowRight,
-  Boxes,
-  GitBranch,
-  Layers,
-  Plug,
-  ShieldCheck,
-  Sparkles,
-  Terminal,
-} from 'lucide-react';
+import { ArrowRight, ShieldCheck } from 'lucide-react';
+import Link from 'next/link';
 import { CodeCard } from '@/components/code-card';
-
-const GITHUB = 'https://github.com/makloai/agentora';
-const NPM = 'https://www.npmjs.com/package/@agentora/core';
+import { Faq } from '@/components/faq';
+import { JsonLd } from '@/components/json-ld';
+import { SiteFooter } from '@/components/site-footer';
+import { SiteHeader } from '@/components/site-header';
+import { faq, packages, site, surfaces } from '@/lib/site';
 
 const contractCode = `// contracts/products.ts — pure, isomorphic, shippable anywhere
 import { defineContract, s } from '@agentora/core'
@@ -47,30 +41,9 @@ const doctorOutput = `$ npx agentora doctor
   ✗ accounts.delete   no idempotency key, unbounded concurrency
   Agent-readiness: 72/100`;
 
-const surfaces = [
-  { name: 'MCP', desc: 'stdio + Streamable HTTP, OAuth 2.1', icon: Plug },
-  { name: 'Vercel AI SDK', desc: 'typed tool() definitions', icon: Sparkles },
-  { name: 'OpenAI', desc: 'Chat + Responses tool specs', icon: Boxes },
-  { name: 'HTTP', desc: 'fetch handler + discovery', icon: GitBranch },
-  { name: 'CLI', desc: 'one subcommand per action', icon: Terminal },
-  { name: 'Typed client', desc: 'browser-safe, + React hooks', icon: Layers },
-];
-
-const packages = [
-  '@agentora/core',
-  '@agentora/server',
-  '@agentora/mcp',
-  '@agentora/ai-sdk',
-  '@agentora/openai',
-  '@agentora/http',
-  '@agentora/client',
-  '@agentora/cli',
-  '@agentora/doctor',
-];
-
 function Pill({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/60 px-3 py-1 text-xs text-zinc-400">
+    <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1 text-muted-foreground text-xs">
       {children}
     </span>
   );
@@ -79,197 +52,234 @@ function Pill({ children }: { children: React.ReactNode }) {
 export default function Home() {
   return (
     <div className="relative min-h-screen overflow-x-hidden">
-      {/* Nav */}
-      <header className="sticky top-0 z-50 border-b border-zinc-900/80 bg-[#09090b]/80 backdrop-blur">
-        <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <a href="/" className="flex items-center gap-2 font-mono text-sm font-semibold tracking-tight">
-            <span className="grid size-6 place-items-center rounded-md bg-emerald-500/15 text-emerald-400">
-              ◆
-            </span>
-            agentora
-          </a>
-          <div className="flex items-center gap-6 text-sm text-zinc-400">
-            <a href="#surfaces" className="hidden hover:text-zinc-100 sm:block">
-              Surfaces
-            </a>
-            <a href="#doctor" className="hidden hover:text-zinc-100 sm:block">
-              Doctor
-            </a>
-            <a href={NPM} className="hover:text-zinc-100" target="_blank" rel="noreferrer">
-              npm
-            </a>
-            <a
-              href={GITHUB}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-lg border border-zinc-700 px-3 py-1.5 text-zinc-100 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
-            >
-              GitHub
-            </a>
-          </div>
-        </nav>
-      </header>
+      <JsonLd
+        data={{
+          '@context': 'https://schema.org',
+          '@type': 'SoftwareApplication',
+          name: site.name,
+          applicationCategory: 'DeveloperApplication',
+          operatingSystem: 'Web',
+          description: site.description,
+          url: site.url,
+          license: 'https://opensource.org/licenses/MIT',
+          offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+        }}
+      />
+
+      <SiteHeader />
 
       {/* Hero */}
       <section className="relative">
-        <div className="pointer-events-none absolute inset-0 grid-backdrop" />
-        <div className="relative mx-auto max-w-6xl px-6 pb-20 pt-24 text-center">
+        <div className="grid-backdrop pointer-events-none absolute inset-0" />
+        <div className="relative mx-auto max-w-6xl px-6 pt-24 pb-20 text-center">
           <div className="mb-6 flex justify-center">
             <Pill>
-              <span className="size-1.5 rounded-full bg-emerald-400" />
-              v0.1 · open source · MIT
+              <span className="size-1.5 rounded-full bg-primary" />
+              {site.version} · open source · {site.license}
             </Pill>
           </div>
-          <h1 className="mx-auto max-w-4xl text-balance text-5xl font-semibold tracking-tight text-zinc-50 sm:text-6xl md:text-7xl">
+          <h1 className="mx-auto max-w-4xl text-balance font-semibold text-5xl text-foreground tracking-tight sm:text-6xl md:text-7xl">
             One contract,
             <br />
-            <span className="bg-gradient-to-r from-emerald-300 to-teal-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent dark:from-emerald-300 dark:to-teal-400">
               every agent surface.
             </span>
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-balance text-lg leading-relaxed text-zinc-400">
-            Define an application capability <span className="text-zinc-200">once</span> as a typed
-            contract, then expose it to MCP, the Vercel AI SDK, OpenAI, HTTP, a CLI, and a typed
-            client — without re-implementing validation, auth, or error handling per surface.
+          <p className="mx-auto mt-6 max-w-2xl text-balance text-lg text-muted-foreground leading-relaxed">
+            Define an application capability{' '}
+            <span className="text-foreground">once</span> as a typed contract,
+            then expose it to MCP, the Vercel AI SDK, OpenAI, HTTP, a CLI, and a
+            typed client — without re-implementing validation, auth, or error
+            handling per surface.
           </p>
 
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <a
-              href={GITHUB}
-              target="_blank"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 font-medium text-primary-foreground text-sm transition-colors hover:opacity-90"
+              href={site.github}
               rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-medium text-emerald-950 transition-colors hover:bg-emerald-400"
+              target="_blank"
             >
               Star on GitHub <ArrowRight className="size-4" />
             </a>
-            <code className="rounded-xl border border-zinc-800 bg-zinc-950/80 px-5 py-3 font-mono text-sm text-zinc-300">
-              <span className="text-zinc-600">$ </span>npm i @agentora/core @agentora/server
-            </code>
+            <Link
+              className="inline-flex items-center gap-2 rounded-xl border border-border px-5 py-3 font-medium text-foreground text-sm transition-colors hover:bg-card"
+              href="/docs"
+            >
+              Read the docs
+            </Link>
           </div>
 
-          <p className="mt-6 text-sm text-zinc-500">
-            A <span className="text-zinc-300">capability layer</span>, not an agent framework —
-            unopinionated about orchestration, prompts, and memory.
+          <code className="mt-6 inline-block rounded-xl border border-border bg-card px-5 py-3 font-mono text-muted-foreground text-sm">
+            <span className="text-muted-foreground/60">$ </span>npm i
+            @agentora/core @agentora/server
+          </code>
+
+          <p className="mt-6 text-muted-foreground text-sm">
+            A <span className="text-foreground">capability layer</span>, not an
+            agent framework — unopinionated about orchestration, prompts, and
+            memory.
           </p>
         </div>
       </section>
 
       {/* Problem */}
       <section className="mx-auto max-w-3xl px-6 py-16 text-center">
-        <h2 className="text-2xl font-semibold text-zinc-100 sm:text-3xl">
+        <h2 className="font-semibold text-2xl text-foreground sm:text-3xl">
           Stop re-implementing the same capability N times.
         </h2>
-        <p className="mt-4 text-balance leading-relaxed text-zinc-400">
-          Exposing one capability to agents usually means a CLI command, an HTTP route, an MCP tool,
-          a tool spec, and a typed client — each with its own validation, error shapes, and auth.
-          They drift, and production concerns get re-solved per surface or skipped. agentora derives
-          every surface from a single contract.
+        <p className="mt-4 text-balance text-muted-foreground leading-relaxed">
+          Exposing one capability to agents usually means a CLI command, an HTTP
+          route, an MCP tool, a tool spec, and a typed client — each with its own
+          validation, error shapes, and auth. They drift, and production concerns
+          get re-solved per surface or skipped. {site.name} derives every surface
+          from a single contract.
         </p>
       </section>
 
       {/* Code: contract-first */}
       <section className="mx-auto max-w-6xl px-6 py-12">
         <div className="mb-10 text-center">
-          <h2 className="text-2xl font-semibold text-zinc-100 sm:text-3xl">Contract-first by design</h2>
-          <p className="mt-3 text-zinc-400">
-            The pure contract ships anywhere. The handler stays server-side. Surfaces are adapters.
+          <h2 className="font-semibold text-2xl text-foreground sm:text-3xl">
+            Contract-first by design
+          </h2>
+          <p className="mt-3 text-muted-foreground">
+            The pure contract ships anywhere. The handler stays server-side.
+            Surfaces are adapters.
           </p>
         </div>
         <div className="grid gap-5 lg:grid-cols-3">
-          <CodeCard title="contracts/products.ts" code={contractCode} />
-          <CodeCard title="server/products.ts" code={serverCode} />
-          <CodeCard title="surfaces.ts" code={surfacesCode} />
+          <CodeCard code={contractCode} title="contracts/products.ts" />
+          <CodeCard code={serverCode} title="server/products.ts" />
+          <CodeCard code={surfacesCode} title="surfaces.ts" />
         </div>
       </section>
 
       {/* Surfaces */}
-      <section id="surfaces" className="mx-auto max-w-6xl px-6 py-16">
+      <section className="mx-auto max-w-6xl px-6 py-16" id="surfaces">
         <div className="mb-10 text-center">
-          <h2 className="text-2xl font-semibold text-zinc-100 sm:text-3xl">Every surface, one source</h2>
-          <p className="mt-3 text-zinc-400">
-            Each adapter is independently installable — add only the surfaces you use.
+          <h2 className="font-semibold text-2xl text-foreground sm:text-3xl">
+            Every surface, one source
+          </h2>
+          <p className="mt-3 text-muted-foreground">
+            Each adapter is independently installable — add only the surfaces you
+            use.
           </p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {surfaces.map(({ name, desc, icon: Icon }) => (
             <div
+              className="group rounded-2xl border border-border bg-card/40 p-6 transition-colors hover:border-primary/40 hover:bg-card"
               key={name}
-              className="group rounded-2xl border border-zinc-800 bg-zinc-950/40 p-6 transition-colors hover:border-zinc-700 hover:bg-zinc-900/40"
             >
-              <div className="mb-4 grid size-10 place-items-center rounded-lg bg-emerald-500/10 text-emerald-400">
+              <div className="mb-4 grid size-10 place-items-center rounded-lg bg-primary/10 text-primary">
                 <Icon className="size-5" />
               </div>
-              <h3 className="font-medium text-zinc-100">{name}</h3>
-              <p className="mt-1 text-sm text-zinc-400">{desc}</p>
+              <h3 className="font-medium text-foreground">{name}</h3>
+              <p className="mt-1 text-muted-foreground text-sm">{desc}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Doctor */}
-      <section id="doctor" className="mx-auto max-w-6xl px-6 py-16">
+      <section className="mx-auto max-w-6xl px-6 py-16" id="doctor">
         <div className="grid items-center gap-10 lg:grid-cols-2">
           <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-1.5 text-sm text-emerald-400">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-1.5 text-primary text-sm">
               <ShieldCheck className="size-4" /> The headline feature
             </div>
-            <h2 className="text-2xl font-semibold text-zinc-100 sm:text-3xl">
+            <h2 className="font-semibold text-2xl text-foreground sm:text-3xl">
               Know how agent-ready you are.
             </h2>
-            <p className="mt-4 leading-relaxed text-zinc-400">
-              <code className="rounded bg-zinc-900 px-1.5 py-0.5 font-mono text-sm text-zinc-200">
+            <p className="mt-4 text-muted-foreground leading-relaxed">
+              <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-foreground text-sm">
                 agentora doctor
               </code>{' '}
-              lints your manifest for what agents actually need — declared idempotency on writes,
-              permission hooks, bounded concurrency, descriptions — and scores it. Wire it into CI to
-              gate readiness.
+              lints your manifest for what agents actually need — declared
+              idempotency on writes, permission hooks, bounded concurrency,
+              descriptions — and scores it. Wire it into CI to gate readiness.
             </p>
+            <Link
+              className="mt-6 inline-flex items-center gap-1.5 font-medium text-primary text-sm hover:underline"
+              href="/docs/doctor"
+            >
+              How the score works <ArrowRight className="size-3.5" />
+            </Link>
           </div>
-          <CodeCard title="terminal" code={doctorOutput} />
+          <CodeCard code={doctorOutput} title="terminal" />
         </div>
       </section>
 
       {/* Packages */}
       <section className="mx-auto max-w-6xl px-6 py-16">
-        <div className="rounded-3xl border border-zinc-800 bg-zinc-950/40 p-10 text-center">
-          <h2 className="text-2xl font-semibold text-zinc-100">Nine packages. Install what you need.</h2>
+        <div className="rounded-3xl border border-border bg-card/40 p-10 text-center">
+          <h2 className="font-semibold text-2xl text-foreground">
+            Nine packages. Install what you need.
+          </h2>
           <div className="mt-8 flex flex-wrap justify-center gap-2.5">
             {packages.map((p) => (
               <span
+                className="rounded-lg border border-border bg-muted px-3 py-1.5 font-mono text-foreground text-xs"
                 key={p}
-                className="rounded-lg border border-zinc-800 bg-zinc-900/50 px-3 py-1.5 font-mono text-xs text-zinc-300"
               >
                 {p}
               </span>
             ))}
           </div>
           <div className="mt-9">
-            <a
-              href={GITHUB}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-medium text-emerald-950 transition-colors hover:bg-emerald-400"
+            <Link
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 font-medium text-primary-foreground text-sm transition-colors hover:opacity-90"
+              href="/docs/getting-started"
             >
               Get started <ArrowRight className="size-4" />
-            </a>
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-zinc-900">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-10 text-sm text-zinc-500 sm:flex-row">
-          <span className="font-mono">◆ agentora · MIT</span>
-          <div className="flex gap-6">
-            <a href={GITHUB} target="_blank" rel="noreferrer" className="hover:text-zinc-200">
-              GitHub
-            </a>
-            <a href={NPM} target="_blank" rel="noreferrer" className="hover:text-zinc-200">
-              npm
-            </a>
+      {/* FAQ */}
+      <section className="mx-auto max-w-3xl px-6 py-16">
+        <h2 className="text-center font-semibold text-2xl text-foreground sm:text-3xl">
+          Frequently asked questions
+        </h2>
+        <div className="mt-10">
+          <Faq items={faq} />
+        </div>
+      </section>
+
+      {/* CTA band */}
+      <section className="mx-auto max-w-6xl px-6 pb-20">
+        <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 to-card px-8 py-14 text-center sm:px-12">
+          <div className="relative mx-auto flex max-w-xl flex-col items-center gap-5">
+            <h2 className="text-balance font-semibold text-3xl text-foreground tracking-tight sm:text-4xl">
+              Make your capabilities agent-ready by construction.
+            </h2>
+            <p className="text-muted-foreground leading-relaxed">
+              One typed contract, every surface, and a readiness score you can
+              gate in CI. Open source under {site.license}.
+            </p>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <a
+                className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 font-medium text-primary-foreground text-sm transition-colors hover:opacity-90"
+                href={site.github}
+                rel="noreferrer"
+                target="_blank"
+              >
+                Star on GitHub <ArrowRight className="size-4" />
+              </a>
+              <Link
+                className="inline-flex items-center gap-2 rounded-xl border border-border bg-background/60 px-6 py-3 font-medium text-foreground text-sm transition-colors hover:bg-card"
+                href="/docs"
+              >
+                Read the docs
+              </Link>
+            </div>
           </div>
         </div>
-      </footer>
+      </section>
+
+      <SiteFooter />
     </div>
   );
 }
