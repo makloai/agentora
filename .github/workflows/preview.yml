@@ -16,13 +16,13 @@
 # `head.repo.full_name == github.repository`. A fork PR cannot read the deploy
 # secrets, and the gate is a security invariant — never remove it.
 #
-# Required configuration (GitHub → Settings → Environments → `website-preview`):
+# Required configuration (GitHub → repo Variables + Environments):
 #   - secret: VERCEL_TOKEN
 #   - vars:   VERCEL_ORG_ID, VERCEL_PROJECT_ID
-# The Vercel project's Root Directory must be the repo root (this vercel.json
-# describes how to build the isolated website/ workspace). If Vercel's own Git
-# integration is still auto-deploying this project, disable it so CI is the
-# single source of preview deploys.
+# The Vercel project's Root Directory is `website/` (the isolated Next.js
+# workspace), so Vercel auto-detects the framework and builds it directly — no
+# vercel.json is needed. If Vercel's own Git integration is still auto-deploying
+# this project, disable it so CI is the single source of preview deploys.
 
 name: preview
 
@@ -32,7 +32,6 @@ on:
     branches: [main]
     paths:
       - "website/**"
-      - "vercel.json"
       - ".github/workflows/preview.yml"
 
 permissions:
@@ -102,8 +101,8 @@ jobs:
           fi
 
       # ── Build + deploy ────────────────────────────────────────────────
-      # Run the Vercel CLI from the repo root; vercel.json's installCommand /
-      # buildCommand / outputDirectory describe how to build the website/ app.
+      # The Vercel project's Root Directory is `website/`, so `vercel pull`
+      # fetches that setting and `vercel build` builds the Next.js app there.
       - name: Install Vercel CLI
         if: steps.guard.outputs.configured == 'true'
         run: npm install --global vercel@latest

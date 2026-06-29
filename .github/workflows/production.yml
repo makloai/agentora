@@ -11,12 +11,12 @@
 # the `website-production` environment's deployment URL — there is no PR to
 # comment on for a push to main.
 #
-# Required configuration (GitHub → Settings → Environments → `website-production`):
+# Required configuration (GitHub → repo Variables + Environments):
 #   - secret: VERCEL_TOKEN
 #   - vars:   VERCEL_ORG_ID, VERCEL_PROJECT_ID
-# See preview.yml for the Vercel project / Root Directory notes. If Vercel's
-# own Git integration still auto-deploys main, disable it so CI is the single
-# source of production deploys.
+# The Vercel project's Root Directory is `website/`; see preview.yml for notes.
+# If Vercel's own Git integration still auto-deploys main, disable it so CI is
+# the single source of production deploys.
 
 name: production
 
@@ -26,7 +26,6 @@ on:
     branches: [main]
     paths:
       - "website/**"
-      - "vercel.json"
       - ".github/workflows/production.yml"
 
 permissions:
