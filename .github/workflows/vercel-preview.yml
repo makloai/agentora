@@ -1,0 +1,155 @@
+# Preview-deploy workflow for the website (apps live one level down in website/).
+#
+# Adapted from makloai/makloai's vercel-preview.yml, simplified for this repo:
+# there is a single deployable app (the isolated `website/` pnpm workspace) and
+# no database, so the affected-app matrix, Neon branch provisioning, and
+# Playwright stages are dropped. What's kept is the core shape — build on the
+# runner, upload a prebuilt deploy to Vercel, and post the preview URL back to
+# the PR as a sticky comment.
+#
+# Each PR push against main that touches website/ (or this workflow):
+#   1. type-checks the website as a fast gate before paying for a deploy;
+#   2. builds locally via `vercel build` and uploads the prebuilt output;
+#   3. posts/updates a single sticky comment with the preview URL.
+#
+# Fork-PR handling: the job gates on
+# `head.repo.full_name == github.repository`. A fork PR cannot read the deploy
+# secrets, and the gate is a security invariant — never remove it.
+#
+# Required configuration (GitHub → Settings → Environments → `website-preview`):
+#   - secret: VERCEL_TOKEN
+#   - vars:   VERCEL_ORG_ID, VERCEL_PROJECT_ID
+# The Vercel project's Root Directory must be the repo root (this vercel.json
+# describes how to build the isolated website/ workspace). If Vercel's own Git
+# integration is still auto-deploying this project, disable it so CI is the
+# single source of preview deploys.
+
+name: vercel-preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+    paths:
+      - "website/**"
+      - "vercel.json"
+      - ".github/workflows/vercel-preview.yml"
+
+permissions:
+  contents: read
+
+# Cancel an in-flight preview when a newer commit lands on the same PR.
+concurrency:
+  group: vercel-preview-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  vercel-deploy:
+    name: vercel-deploy
+    # Skip fork PRs: they cannot access the deploy secrets, and exposing those
+    # secrets to fork-controlled code would be a security hole. Security invariant.
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write # post the sticky preview-URL comment
+    environment:
+      name: website-preview
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.1.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: website/pnpm-lock.yaml
+
+      # ── Quality gate ──────────────────────────────────────────────────
+      # Type-check the website before paying for a deploy. This step carries no
+      # secret env, so a compromised dependency script here cannot read the
+      # Vercel credentials used by the deploy steps below.
+      - name: Install website dependencies
+        working-directory: website
+        run: pnpm install --frozen-lockfile
+
+      - name: Type-check website
+        working-directory: website
+        run: pnpm check-types
+
+      # Skip the deploy steps (but keep the job green) until the Vercel
+      # credentials exist, so this workflow is safe to merge before the
+      # `website-preview` environment is configured. `secrets` can't be read in
+      # an `if:` directly, so we surface a boolean here and gate on it below.
+      - name: Check deploy configuration
+        id: guard
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "::notice::VERCEL_TOKEN not set on the website-preview environment — skipping deploy. Add it to enable preview deploys."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ── Build + deploy ────────────────────────────────────────────────
+      # Run the Vercel CLI from the repo root; vercel.json's installCommand /
+      # buildCommand / outputDirectory describe how to build the website/ app.
+      - name: Install Vercel CLI
+        if: steps.guard.outputs.configured == 'true'
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel project settings (preview)
+        if: steps.guard.outputs.configured == 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+        run: vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+
+      - name: Build (prebuilt)
+        if: steps.guard.outputs.configured == 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+        run: vercel build --token="$VERCEL_TOKEN"
+
+      - name: Deploy to Vercel (prebuilt)
+        id: deploy
+        if: steps.guard.outputs.configured == 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+        run: |
+          url="$(vercel deploy --prebuilt --archive=tgz --yes --token="$VERCEL_TOKEN")"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      # ── Comment on deployment ─────────────────────────────────────────
+      # A single sticky comment (keyed by `header`) that updates in place on
+      # each new push instead of stacking new comments.
+      - name: Comment preview URL on PR
+        if: steps.guard.outputs.configured == 'true'
+        uses: marocchino/sticky-pull-request-comment@v3
+        with:
+          header: vercel-preview-website
+          message: |
+            ## 🚀 Preview deployed — agentora website
+
+            | Field       | Value                                   |
+            | ----------- | --------------------------------------- |
+            | Preview URL | ${{ steps.deploy.outputs.url }}         |
+            | Commit      | `${{ github.event.pull_request.head.sha }}` |
+            | Logs        | [run #${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) |
+
+            <sub>Updated automatically on every push to this PR.</sub>

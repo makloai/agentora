@@ -1,0 +1,133 @@
+# Production-deploy workflow for the website.
+#
+# Adapted from makloai/makloai's vercel-production.yml, simplified to this
+# repo's single isolated `website/` app (no affected-app matrix, no Neon, no
+# migrations). On every push to main that touches website/ (or this workflow),
+# it type-checks, builds locally via `vercel build --prod`, and uploads the
+# prebuilt output as a production deploy. Also runnable on demand via
+# workflow_dispatch.
+#
+# The production URL is written to the run's job summary and surfaced through
+# the `website-production` environment's deployment URL — there is no PR to
+# comment on for a push to main.
+#
+# Required configuration (GitHub → Settings → Environments → `website-production`):
+#   - secret: VERCEL_TOKEN
+#   - vars:   VERCEL_ORG_ID, VERCEL_PROJECT_ID
+# See vercel-preview.yml for the Vercel project / Root Directory notes. If
+# Vercel's own Git integration still auto-deploys main, disable it so CI is the
+# single source of production deploys.
+
+name: vercel-production
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "website/**"
+      - "vercel.json"
+      - ".github/workflows/vercel-production.yml"
+
+permissions:
+  contents: read
+
+# Serialize production deploys so a second merge queues behind the first
+# instead of racing it. Don't cancel an in-flight production deploy.
+concurrency:
+  group: vercel-production
+  cancel-in-progress: false
+
+jobs:
+  vercel-deploy:
+    name: vercel-deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    environment:
+      name: website-production
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.1.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          cache-dependency-path: website/pnpm-lock.yaml
+
+      # ── Quality gate ──────────────────────────────────────────────────
+      - name: Install website dependencies
+        working-directory: website
+        run: pnpm install --frozen-lockfile
+
+      - name: Type-check website
+        working-directory: website
+        run: pnpm check-types
+
+      # Skip the deploy steps (but keep the job green) until the Vercel
+      # credentials exist on the `website-production` environment.
+      - name: Check deploy configuration
+        id: guard
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "::notice::VERCEL_TOKEN not set on the website-production environment — skipping deploy. Add it to enable production deploys."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ── Build + deploy ────────────────────────────────────────────────
+      - name: Install Vercel CLI
+        if: steps.guard.outputs.configured == 'true'
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel project settings (production)
+        if: steps.guard.outputs.configured == 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Build (prebuilt, production)
+        if: steps.guard.outputs.configured == 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+        run: vercel build --prod --token="$VERCEL_TOKEN"
+
+      - name: Deploy to Vercel (prebuilt, production)
+        id: deploy
+        if: steps.guard.outputs.configured == 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+        run: |
+          url="$(vercel deploy --prod --prebuilt --archive=tgz --yes --token="$VERCEL_TOKEN")"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      # ── Report the deployment ─────────────────────────────────────────
+      - name: Summarize deployment
+        if: steps.guard.outputs.configured == 'true'
+        run: |
+          {
+            echo "## 🚀 Production deployed — agentora website"
+            echo ""
+            echo "| Field | Value |"
+            echo "| ----- | ----- |"
+            echo "| Production URL | ${{ steps.deploy.outputs.url }} |"
+            echo "| Commit | \`${{ github.sha }}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
