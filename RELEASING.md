@@ -27,48 +27,35 @@ and GitHub Actions. You never run `npm publish` by hand.
 Private packages (e.g. `examples/*`) are skipped automatically. Internal
 `workspace:*` dependencies are rewritten to real versions on publish.
 
-## Authentication: npm Trusted Publishing (no tokens)
+## Authentication: `NPM_TOKEN` secret
 
-Publishing authenticates with [npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers):
-GitHub Actions presents an OIDC identity token, npm verifies it against a
-publisher you registered, and issues short-lived credentials for that run. There
-is **no `NPM_TOKEN` secret** to create, leak, or rotate, and provenance is
-generated automatically.
+Publishing authenticates with an npm access token stored as a repository secret.
+The workflow passes it as `NODE_AUTH_TOKEN`, which the registry `.npmrc` (written
+by `actions/setup-node`) reads.
 
-The workflow already has what it needs: `id-token: write` permission, and a step
-that upgrades the runner to npm ≥ 11.5.1 (Trusted Publishing requires it; the
-Node 20/22 bundled npm is too old).
+### One-time setup
 
-### One-time setup on npmjs.com
-
-For **each** `@agentora/*` package, register this repo as a trusted publisher:
-package page → **Settings → Trusted Publisher → GitHub Actions**, then enter:
-
-- **Organization / repository:** `makloai/agentora`
-- **Workflow filename:** `release.yml`
-- **Environment:** leave blank (the workflow defines none)
-
-### First publish (bootstrap)
-
-A trusted publisher can only be attached to a package that already exists on npm.
-For the **initial** publish of these brand-new packages, either:
-
-1. publish once manually from a maintainer machine (`pnpm -r publish --access public`,
-   while logged in to an account that owns the `@agentora` scope), then register
-   the trusted publishers above so every subsequent release is tokenless; or
-2. if your npm org allows it, pre-create the trusted-publisher config and let the
-   first CI run create the packages.
-
-After bootstrap, releases are fully automated and require no secrets.
+1. **Create an npm token** with publish rights to the `@agentora` scope —
+   npmjs.com → **Access Tokens**. Use a **Granular** token scoped to `@agentora`
+   with _Read and write_, or a classic **Automation** token. Automation/granular
+   tokens bypass 2FA, which CI requires (an interactive OTP can't be entered in a
+   workflow).
+2. **Add it as a repo secret** named `NPM_TOKEN` — GitHub repo → Settings →
+   Secrets and variables → Actions → New repository secret.
 
 ### Notes
 
-- **Scope access** — every package sets `publishConfig.access: public`; the
-  publishing identity must own (or belong to) the `@agentora` org/scope.
-- **Provenance** — Trusted Publishing emits
-  [npm provenance](https://docs.npmjs.com/generating-provenance-statements)
-  automatically (`id-token: write` enables it). Every package declares the
-  `repository` field provenance requires.
+- **Scope access** — every package sets `publishConfig.access: public`; the token
+  owner must own (or belong to) the `@agentora` org/scope.
+- **Provenance** — the workflow keeps `id-token: write` and
+  `NPM_CONFIG_PROVENANCE=true`, so releases still publish with
+  [npm provenance](https://docs.npmjs.com/generating-provenance-statements).
+  Every package declares the `repository` field provenance requires.
+- **First publish (bootstrap)** — the first release of these brand-new packages
+  can also be done manually from a maintainer machine:
+  `pnpm -r publish --access public` (the token in your `~/.npmrc` must bypass 2FA,
+  i.e. an automation/granular token, since an interactive OTP blocks scripted
+  publishes).
 
 ## Versioning policy
 

@@ -10,7 +10,7 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 permissions:
   contents: write # create the Version Packages PR / tags
   pull-requests: write # open/update the Version Packages PR
-  id-token: write # OIDC for npm Trusted Publishing (auth + provenance)
+  id-token: write # npm provenance
 
 jobs:
   release:
@@ -25,12 +25,9 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
           registry-url: https://registry.npmjs.org
-      # Trusted Publishing needs npm CLI >= 11.5.1; Node 20/22 bundle an older npm.
-      - run: npm install -g npm@latest
       - run: pnpm install --frozen-lockfile
       # When changesets exist, opens/updates a "Version Packages" PR. When that PR
-      # merges (no changesets left, only version bumps), publishes to npm — no
-      # NPM_TOKEN: authentication and provenance come from OIDC Trusted Publishing.
+      # merges (no changesets left, only version bumps), publishes to npm.
       - uses: changesets/action@v1
         with:
           publish: pnpm release
@@ -39,3 +36,7 @@ jobs:
           title: "chore: version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # setup-node's registry-url writes an .npmrc keyed on NODE_AUTH_TOKEN.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # Publish with npm provenance (requires id-token: write above).
+          NPM_CONFIG_PROVENANCE: true
