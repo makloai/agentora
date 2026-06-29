@@ -136,8 +136,10 @@ jobs:
           echo "url=$url" >> "$GITHUB_OUTPUT"
 
       # ── Comment on deployment ─────────────────────────────────────────
-      # A single sticky comment (keyed by `header`) that updates in place on
-      # each new push instead of stacking new comments.
+      # Always leave exactly one sticky comment (keyed by `header`) so the PR
+      # shows deploy status even before Vercel is configured. The two steps are
+      # mutually exclusive on `configured` and share the same header, so
+      # whichever runs updates the same comment in place.
       - name: Comment preview URL on PR
         if: steps.guard.outputs.configured == 'true'
         uses: marocchino/sticky-pull-request-comment@v3
@@ -153,3 +155,25 @@ jobs:
             | Logs        | [run #${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) |
 
             <sub>Updated automatically on every push to this PR.</sub>
+
+      - name: Comment deploy-pending notice on PR
+        if: steps.guard.outputs.configured != 'true'
+        uses: marocchino/sticky-pull-request-comment@v3
+        with:
+          header: preview-website
+          message: |
+            ## ⏳ Preview deploy not configured yet — agentora website
+
+            The website type-check passed, but the preview deploy was skipped
+            because the `website-preview` environment has no `VERCEL_TOKEN`.
+
+            Add these to **Settings → Environments → `website-preview`** to enable it:
+
+            | Kind   | Name                                  |
+            | ------ | ------------------------------------- |
+            | secret | `VERCEL_TOKEN`                        |
+            | var    | `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`  |
+
+            Once set, this comment updates with the live preview URL on the next push.
+
+            <sub>Logs: [run #${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})</sub>
