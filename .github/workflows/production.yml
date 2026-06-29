@@ -14,11 +14,11 @@
 # Required configuration (GitHub → Settings → Environments → `website-production`):
 #   - secret: VERCEL_TOKEN
 #   - vars:   VERCEL_ORG_ID, VERCEL_PROJECT_ID
-# See vercel-preview.yml for the Vercel project / Root Directory notes. If
-# Vercel's own Git integration still auto-deploys main, disable it so CI is the
-# single source of production deploys.
+# See preview.yml for the Vercel project / Root Directory notes. If Vercel's
+# own Git integration still auto-deploys main, disable it so CI is the single
+# source of production deploys.
 
-name: vercel-production
+name: production
 
 on:
   workflow_dispatch:
@@ -27,7 +27,7 @@ on:
     paths:
       - "website/**"
       - "vercel.json"
-      - ".github/workflows/vercel-production.yml"
+      - ".github/workflows/production.yml"
 
 permissions:
   contents: read
@@ -35,12 +35,12 @@ permissions:
 # Serialize production deploys so a second merge queues behind the first
 # instead of racing it. Don't cancel an in-flight production deploy.
 concurrency:
-  group: vercel-production
+  group: production
   cancel-in-progress: false
 
 jobs:
-  vercel-deploy:
-    name: vercel-deploy
+  deploy:
+    name: deploy
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:

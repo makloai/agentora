@@ -24,7 +24,7 @@
 # integration is still auto-deploying this project, disable it so CI is the
 # single source of preview deploys.
 
-name: vercel-preview
+name: preview
 
 on:
   pull_request:
@@ -33,19 +33,19 @@ on:
     paths:
       - "website/**"
       - "vercel.json"
-      - ".github/workflows/vercel-preview.yml"
+      - ".github/workflows/preview.yml"
 
 permissions:
   contents: read
 
 # Cancel an in-flight preview when a newer commit lands on the same PR.
 concurrency:
-  group: vercel-preview-pr-${{ github.event.pull_request.number }}
+  group: preview-pr-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
-  vercel-deploy:
-    name: vercel-deploy
+  deploy:
+    name: deploy
     # Skip fork PRs: they cannot access the deploy secrets, and exposing those
     # secrets to fork-controlled code would be a security hole. Security invariant.
     if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
@@ -142,7 +142,7 @@ jobs:
         if: steps.guard.outputs.configured == 'true'
         uses: marocchino/sticky-pull-request-comment@v3
         with:
-          header: vercel-preview-website
+          header: preview-website
           message: |
             ## 🚀 Preview deployed — agentora website
 
