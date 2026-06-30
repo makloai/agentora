@@ -4,8 +4,8 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-sans: var(--font-sans-src), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono-src), ui-monospace, monospace;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -18,30 +18,31 @@
   --color-primary-foreground: var(--primary-foreground);
 }
 
-/* Light is the default; .dark flips the tokens. Emerald stays the accent in
-   both, tuned per-mode for contrast (emerald-600 on light, emerald-400 on dark). */
+/* Light is the default; .dark flips the tokens. Warm "coconut" palette: cream
+   paper neutrals with a terracotta accent, tuned per-mode for contrast
+   (deep terracotta on light, a lighter clay tone on dark). */
 :root {
-  --background: #ffffff;
-  --foreground: #18181b;
-  --card: #fafafa;
-  --card-foreground: #18181b;
-  --muted: #f4f4f5;
-  --muted-foreground: #52525b;
-  --border: #e4e4e7;
-  --primary: #059669;
-  --primary-foreground: #ffffff;
+  --background: #f4f0e8;
+  --foreground: #221c18;
+  --card: #faf6ee;
+  --card-foreground: #221c18;
+  --muted: #e9e0d2;
+  --muted-foreground: #6b5d50;
+  --border: #ddd2c1;
+  --primary: #b1542f;
+  --primary-foreground: #faf6ee;
 }
 
 .dark {
-  --background: #09090b;
-  --foreground: #e4e4e7;
-  --card: #18181b;
-  --card-foreground: #fafafa;
-  --muted: #1c1c1f;
-  --muted-foreground: #a1a1aa;
-  --border: #27272a;
-  --primary: #34d399;
-  --primary-foreground: #022c22;
+  --background: #1b1613;
+  --foreground: #ece2d4;
+  --card: #261f1a;
+  --card-foreground: #f5efe5;
+  --muted: #2d251f;
+  --muted-foreground: #b1a392;
+  --border: #3a302a;
+  --primary: #d4744f;
+  --primary-foreground: #241710;
 }
 
 html {
