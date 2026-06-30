@@ -81,7 +81,7 @@ export default function Home() {
           <h1 className="mx-auto max-w-4xl text-balance font-semibold text-5xl text-foreground tracking-tight sm:text-6xl md:text-7xl">
             One contract,
             <br />
-            <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent dark:from-emerald-300 dark:to-teal-400">
+            <span className="bg-gradient-to-r from-orange-700 to-amber-600 bg-clip-text text-transparent dark:from-orange-400 dark:to-amber-300">
               every agent surface.
             </span>
           </h1>
