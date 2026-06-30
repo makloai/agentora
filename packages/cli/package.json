@@ -1,6 +1,6 @@
 {
   "name": "@agentora/cli",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "CLI adapter and the agentora bin",
   "license": "MIT",
   "repository": {
@@ -18,7 +18,9 @@
   "exports": {
     ".": "./dist/index.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup src/index.ts src/bin.ts --format esm --dts --clean",
     "test": "vitest run --passWithNoTests",

@@ -1,6 +1,6 @@
 {
   "name": "@agentora/ai-sdk",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Vercel AI SDK tool adapter for agentora apps",
   "license": "MIT",
   "repository": {
@@ -15,7 +15,9 @@
   "exports": {
     ".": "./dist/index.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
     "test": "vitest run --passWithNoTests",
