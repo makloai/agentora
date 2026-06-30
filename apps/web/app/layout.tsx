@@ -1,9 +1,20 @@
-import { GeistMono } from 'geist/font/mono';
-import { GeistSans } from 'geist/font/sans';
 import type { Metadata } from 'next';
+import { DM_Sans, JetBrains_Mono } from 'next/font/google';
 import { ThemeProvider, themeScript } from '@/components/theme';
 import { site } from '@/lib/site';
 import './globals.css';
+
+// Warm geometric sans + clean mono to match the coconut palette.
+const sans = DM_Sans({
+  subsets: ['latin'],
+  variable: '--font-sans-src',
+  display: 'swap',
+});
+const mono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono-src',
+  display: 'swap',
+});
 
 const title = `${site.name} — ${site.tagline}`;
 
@@ -50,7 +61,7 @@ export default function RootLayout({
 }) {
   return (
     <html
-      className={`${GeistSans.variable} ${GeistMono.variable}`}
+      className={`${sans.variable} ${mono.variable}`}
       lang="en"
       suppressHydrationWarning
     >
