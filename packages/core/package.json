@@ -1,6 +1,6 @@
 {
   "name": "@agentora/core",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "agentora contracts, schema, router, and manifest IR — isomorphic, zero-dependency",
   "license": "MIT",
   "repository": {
@@ -15,7 +15,9 @@
   "exports": {
     ".": "./dist/index.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
     "test": "vitest run --passWithNoTests",

@@ -1,6 +1,6 @@
 {
   "name": "@agentora/mcp",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "MCP server adapter for agentora apps",
   "license": "MIT",
   "repository": {
@@ -16,7 +16,9 @@
     ".": "./dist/index.js",
     "./oauth": "./dist/oauth.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup src/index.ts src/oauth.ts --format esm --dts --clean",
     "test": "vitest run --passWithNoTests",

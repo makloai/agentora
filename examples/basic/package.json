@@ -1,6 +1,6 @@
 {
   "name": "@agentora/example-basic",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "description": "Dogfood example: one contract, every agentora surface",
   "license": "MIT",
